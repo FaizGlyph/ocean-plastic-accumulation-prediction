@@ -122,7 +122,15 @@ The outputs are proposed at this stage. Actual prediction results will be genera
 
 ---
 
-## 8. Project Structure
+## 8. System Architecture
+
+The proposed system follows a simple pipeline from data collection and preprocessing to machine learning prediction and GIS visualization.
+
+![System Architecture](architecture.png)
+
+---
+
+## 9. Project Structure
 
 ```text
 ocean-plastic-accumulation-prediction/
