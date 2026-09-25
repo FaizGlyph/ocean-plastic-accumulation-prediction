@@ -2,155 +2,93 @@
 
 ## Machine Learning Based Prediction and GIS Visualization
 
-### Mini Project — CSE7102
+**Mini Project — CSE7102**  
+**B.Tech Computer Science and Engineering**  
+**Presidency University, Bengaluru**
 
-**Program:** B.Tech Computer Science and Engineering  
-**Semester:** VII  
-**Institution:** Presidency University, Bengaluru
+### Team
+
+- Faizan Ahmed Bagalkot
+- Mohammed Khubaib
+- Danish Mehdi
+
+**Project Guide:** Ms. Rama Bai V.
 
 ---
 
 ## 1. Project Overview
 
-Marine plastic does not spread randomly across the ocean. Its distribution and accumulation are influenced by factors such as ocean currents, wind, waves, geographical location and time.
+Marine plastic pollution is influenced by environmental and oceanographic conditions such as wind, waves, and ocean currents. Historical plastic observations, however, are limited to specific sampling locations and dates.
 
-This project proposes a machine-learning-based system to predict potential ocean plastic accumulation zones using historical plastic observations and environmental/oceanographic data.
+This project develops a machine-learning-based framework that combines historical plastic observations with environmental and oceanographic data to estimate plastic concentration and visualize spatial accumulation potential across a defined Pacific Ocean study region.
 
-The predicted results will be visualized through an interactive GIS-based web interface.
+The system uses a **Random Forest Regression** model to learn relationships between environmental conditions and observed plastic concentration. The trained model is then applied over a spatial prediction grid and the results are visualized using an interactive GIS interface called **OceanTrace**.
 
----
-
-## 2. Problem Statement
-
-Existing marine plastic observations are fragmented and difficult to use directly for identifying potential accumulation areas.
-
-The proposed system aims to combine historical plastic observations with environmental and oceanographic information and use machine learning to estimate plastic concentration for selected ocean locations or regions.
-
-The predictions will then be displayed on an interactive map to make potential accumulation areas easier to identify and study.
+The system provides model-based predictions and does **not** directly detect plastic from satellite imagery or provide real-time plastic detection.
 
 ---
 
-## 3. Objectives
+## 2. Project Objectives
 
-- Collect and prepare historical marine plastic observation data.
-- Identify suitable environmental and oceanographic variables.
-- Combine and preprocess data from compatible sources.
-- Develop and evaluate machine learning models for plastic concentration prediction.
-- Visualize predicted concentrations using GIS.
-- Provide a simple web-based interface for exploring prediction results.
+The main objectives are:
 
----
-
-## 4. Proposed Inputs
-
-The initial project will focus on a manageable set of inputs:
-
-- Historical plastic observations
-- Ocean current data
-- Wind data
-- Wave conditions
-- Geographic coordinates
-- Date/season information
-
-Additional variables may be considered only if they are required and compatible with the available data.
+1. Integrate historical plastic observations with environmental and oceanographic data.
+2. Prepare a machine-learning dataset using spatial and temporal matching.
+3. Train a Random Forest regression model to estimate plastic concentration.
+4. Evaluate the model using random and spatial cross-validation.
+5. Generate predictions over a spatial grid covering the study region.
+6. Identify areas where predictions are relatively supported by the training data and areas requiring caution.
+7. Visualize the results through an interactive GIS-based interface.
 
 ---
 
-## 5. Proposed Methodology
+## 3. Data Sources
 
-The project follows the workflow:
+### Historical Plastic Observations
 
-**Data Collection**  
-↓  
-**Data Preprocessing**  
-↓  
-**Feature Engineering**  
-↓  
-**ML Model Training**  
-↓  
-**Plastic Concentration Prediction**  
-↓  
-**GIS Visualization**
+The project uses **614 historical marine plastic observations**.
 
-### Model Training
+The observations cover:
 
-Model training will be performed offline using historical labelled data.
+- Period: **2015–2019**
+- Region: Pacific Ocean study region
+- Target variable: Microplastic concentration
+- Unit: **pieces/m³**
+- Latitude and longitude of each observation
 
-Different suitable machine learning models may be compared, and the final model will be selected based on its performance and suitability for the available dataset.
+### ERA5 Reanalysis Data
 
----
+ERA5 environmental data provides:
 
-## 6. Expected Output
+- 10 m u-component wind
+- 10 m v-component wind
+- Mean wave direction
+- Mean wave period
+- Significant wave height
 
-The final system is expected to provide:
+### GLOBCURRENT Ocean Current Data
 
-- Predicted plastic concentration for selected ocean locations/regions.
-- Identification of potential accumulation hotspots.
-- Interactive GIS visualization of predictions.
-- A simple web interface for exploring locations and prediction results.
+GLOBCURRENT provides:
 
-The outputs are proposed at this stage. Actual prediction results will be generated after model training and validation.
+- Zonal current component (`uo`)
+- Meridional current component (`vo`)
+- Daily surface current information
 
----
-
-## 7. Proposed Technology Stack
-
-### Data & Machine Learning
-
-- Python
-- Pandas
-- NumPy
-- Scikit-learn
-
-### Backend
-
-- FastAPI
-
-### Frontend
-
-- React
-
-### Visualization
-
-- GIS mapping library
-
-### Development & Version Control
-
-- Jupyter Notebook / VS Code
-- Git
-- GitHub
+These datasets are spatially and temporally matched with the historical plastic observations.
 
 ---
 
-## 8. System Architecture
+## 4. Data Processing
 
-The proposed system follows a simple pipeline from data collection and preprocessing to machine learning prediction and GIS visualization.
+The environmental variables are matched to each historical plastic observation using the observation location and date/time.
 
-![System Architecture](architecture.png)
+Feature engineering produces the final machine-learning inputs.
 
----
-
-## 9. Project Structure
+Derived variables include:
 
 ```text
-ocean-plastic-accumulation-prediction/
-│
-├── data/
-│   ├── raw/
-│   └── processed/
-│
-├── notebooks/
-│
-├── src/
-│   ├── preprocessing/
-│   ├── features/
-│   └── models/
-│
-├── backend/
-│
-├── frontend/
-│
-├── docs/
-│
-├── README.md
-└── requirements.txt
+Wind Speed = √(wind_u² + wind_v²)
+
+Current Speed = √(current_u² + current_v²)
+
+Month = month extracted from the observation date
