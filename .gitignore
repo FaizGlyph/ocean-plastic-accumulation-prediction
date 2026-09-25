@@ -1,6 +1,6 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
 
@@ -8,6 +8,7 @@ __pycache__/
 venv/
 .venv/
 env/
+ENV/
 
 # Large scientific datasets
 *.nc
@@ -25,11 +26,25 @@ frontend/dist/
 # Environment / secrets
 .env
 .env.*
+.envrc
 
 # OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
 
-# Python generated files
+# Python tools / caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Logs
 *.log
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
