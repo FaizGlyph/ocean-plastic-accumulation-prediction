@@ -1,0 +1,5 @@
+MAE Rank,Model,Mean Spatial MAE,Mean Spatial R2,Results File
+1,SVR,2.5515830275024216,0.15576352620714248,svr_spatial_cv.csv
+2,Extra Trees,2.604853450051443,0.12242082562505249,extra_trees_spatial_cv.csv
+3,Random Forest,2.7195,-0.0939,Original spatial_cv.py output
+4,Gradient Boosting,2.8360600338502193,-0.06032894169130339,gradient_boosting_spatial_cv.csv

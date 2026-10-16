@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import './App.css'
 
@@ -6,7 +7,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-icon">🌊</div>
@@ -40,29 +40,36 @@ function App() {
             <span>◇</span>
             Methodology
           </button>
+          <button
+            className={
+              activePage === 'comparison'
+                ? 'nav-item active'
+                : 'nav-item'
+            }
+            onClick={() => setActivePage('comparison')}
+          >
+            <span>▤</span>
+            Model Comparison
+          </button>          
         </nav>
 
         <div className="sidebar-bottom">
           <div className="project-status">
             <span className="status-dot"></span>
-            Model pipeline active
+            SVR prediction pipeline
           </div>
-
-          <div className="version">
-            CSE7102 · Semester VII
-          </div>
+          <div className="version">CSE7102 · Semester VII</div>
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="main">
         <header className="topbar">
           <div>
             <p className="eyebrow">CSE7102 · MINI PROJECT</p>
             <h1>OceanTrace</h1>
             <p className="project-subtitle">
-              Machine Learning-Based Ocean Plastic Accumulation Prediction & GIS
-              Visualization
+              Machine Learning-Based Ocean Plastic Accumulation Prediction
+              &amp; GIS Visualization
             </p>
           </div>
 
@@ -74,16 +81,12 @@ function App() {
 
         {activePage === 'map' && <PredictionMap />}
         {activePage === 'analysis' && <ModelAnalysis />}
+        {activePage === 'comparison' && <ModelComparison />}
         {activePage === 'methodology' && <Methodology />}
       </main>
     </div>
   )
 }
-
-
-/* =========================
-   PREDICTION MAP
-========================= */
 
 function PredictionMap() {
   return (
@@ -92,30 +95,28 @@ function PredictionMap() {
         <div>
           <h2>Prediction Map</h2>
           <p>
-            Explore model-predicted plastic concentration across the study
-            region.
+            Explore SVR-predicted microplastic concentration across the
+            Pacific Ocean study region.
           </p>
         </div>
 
         <div className="map-note">
-          Predictions are model estimates, not direct plastic detection.
+          Model estimates only — not direct plastic detection.
         </div>
       </div>
 
-      {/* Statistics */}
       <div className="stats-grid">
         <StatCard value="614" label="Historical observations" />
-        <StatCard value="12" label="ML features" />
+        <StatCard value="12" label="Model input features" />
         <StatCard value="6,615" label="Prediction grid points" />
-        <StatCard value="5-fold" label="Cross validation" />
+        <StatCard value="5-fold" label="Spatial cross-validation" />
       </div>
 
-      {/* Map */}
       <section className="map-card">
         <div className="card-header">
           <div>
-            <h3>Accumulation Potential</h3>
-            <p>Pacific Ocean study region</p>
+            <h3>SVR-Predicted Concentration</h3>
+            <p>Pacific Ocean · Predicted concentration in pieces/m³</p>
           </div>
 
           <div className="legend">
@@ -128,21 +129,21 @@ function PredictionMap() {
         <div className="map-container">
           <iframe
             src="/map.html"
-            title="Ocean Plastic Prediction Map"
-          ></iframe>
+            title="SVR Ocean Plastic Prediction and Support Map"
+            style={{ width: '100%', height: '100%', border: 0 }}
+          />
         </div>
       </section>
 
-      {/* Support explanation */}
       <section className="info-grid">
         <div className="info-card">
           <div className="info-icon">◎</div>
           <div>
             <h3>Prediction Support</h3>
             <p>
-              The project checks how close each prediction is to historical
-              observations and how familiar its environmental conditions are
-              to the model.
+              Geographic distance and environmental similarity are used
+              to identify locations that are better represented by the
+              available training observations.
             </p>
           </div>
         </div>
@@ -152,8 +153,9 @@ function PredictionMap() {
           <div>
             <h3>Extrapolation Warning</h3>
             <p>
-              Areas outside the training-data range are flagged instead of
-              being presented as equally reliable predictions.
+              Support categories are diagnostic indicators, not statistical
+              confidence estimates. Validation has not established a
+              consistent increase in SVR error across all support categories.
             </p>
           </div>
         </div>
@@ -162,159 +164,173 @@ function PredictionMap() {
   )
 }
 
-
-/* =========================
-   MODEL ANALYSIS
-========================= */
-
 function ModelAnalysis() {
-  const features = [
-    ['Wind speed', '26.9%'],
-    ['Longitude', '14.3%'],
-    ['Wave direction', '12.2%'],
-    ['Wave height', '8.6%'],
-    ['Current speed', '7.4%'],
-    ['Month', '6.6%'],
-  ]
-
   return (
     <div className="page">
       <div className="page-intro">
         <div>
           <h2>Model Analysis</h2>
           <p>
-            Performance and feature information from the Random Forest model.
+            Performance of the Support Vector Regression model using
+            spatially separated validation folds.
           </p>
         </div>
       </div>
 
       <div className="analysis-grid">
         <div className="metric-card">
-          <span>Random CV MAE</span>
-          <strong>1.9246</strong>
-          <small>5-fold cross validation</small>
+          <span>Out-of-fold MAE</span>
+          <strong>2.5495</strong>
+          <small>pieces/m³ · All held-out predictions</small>
         </div>
 
         <div className="metric-card">
-          <span>Random CV R²</span>
-          <strong>0.5264</strong>
-          <small>Mean across five folds</small>
+          <span>Out-of-fold R²</span>
+          <strong>0.2348</strong>
+          <small>Pooled spatial cross-validation predictions</small>
         </div>
 
         <div className="metric-card caution-card">
-          <span>Spatial CV MAE</span>
-          <strong>2.7195</strong>
-          <small>2° × 2° spatial blocks</small>
+          <span>SVR kernel</span>
+          <strong>RBF</strong>
+          <small>Nonlinear regression</small>
         </div>
 
         <div className="metric-card caution-card">
-          <span>Spatial CV R²</span>
-          <strong>-0.0939</strong>
-          <small>Spatial generalization diagnostic</small>
+          <span>Validation</span>
+          <strong>5-fold</strong>
+          <small>Geographic blocks of 2° × 2°</small>
         </div>
       </div>
 
       <section className="content-card">
         <div className="card-header">
           <div>
-            <h3>Feature Importance</h3>
-            <p>Random Forest feature importance</p>
+            <h3>Model Configuration</h3>
+            <p>Settings used by the current SVR pipeline</p>
           </div>
         </div>
 
         <div className="feature-list">
-          {features.map(([name, value]) => (
+          {[
+            ['Algorithm', 'Support Vector Regression'],
+            ['Kernel', 'Radial Basis Function (RBF)'],
+            ['Feature scaling', 'StandardScaler'],
+            ['Regularization (C)', '10.0'],
+            ['Epsilon', '0.1'],
+            ['Input features', '12'],
+            ['Training observations', '614'],
+          ].map(([name, value]) => (
             <div className="feature-row" key={name}>
               <div className="feature-name">
                 <span>{name}</span>
                 <strong>{value}</strong>
-              </div>
-
-              <div className="bar-background">
-                <div
-                  className="bar"
-                  style={{ width: value }}
-                ></div>
               </div>
             </div>
           ))}
         </div>
 
         <div className="analysis-note">
-          <strong>Important:</strong> Feature importance indicates how the
-          model used the variables. It does not prove that a feature causes
-          higher plastic concentration.
+          <strong>Metric interpretation:</strong> MAE measures the average
+          absolute prediction error in pieces/m³. R² measures predictive
+          performance relative to a mean-value baseline; it is not accuracy
+          expressed as a percentage.
         </div>
       </section>
 
       <section className="content-card">
         <div className="card-header">
           <div>
-            <h3>Validation Interpretation</h3>
-            <p>Why two validation approaches are shown</p>
+            <h3>Spatial Validation</h3>
+            <p>Testing generalization across geographic regions</p>
           </div>
         </div>
 
         <div className="comparison">
           <div>
-            <span className="comparison-label">Random CV</span>
+            <span className="comparison-label">Out-of-fold MAE</span>
             <p>
-              Randomly separates observations into training and testing
-              groups. This measures general predictive performance within the
-              sampled data distribution.
+              The pooled mean absolute error across all 614 held-out
+              predictions is 2.5495 pieces/m³. Each prediction is produced
+              by a model that did not train on that observation.
             </p>
           </div>
 
           <div>
-            <span className="comparison-label spatial">Spatial CV</span>
+            <span className="comparison-label spatial">Limitations</span>
             <p>
-              Separates observations using geographic blocks. The weaker
-              spatial result indicates that predictions become more difficult
-              when moving into different geographic areas.
+              The dataset contains a limited number of observations in a
+              geographically restricted region. Predictions away from
+              observed locations should be interpreted cautiously.
             </p>
           </div>
+        </div>
+      </section>
+
+      <section className="content-card">
+        <div className="card-header">
+          <div>
+            <h3>Support Error Validation</h3>
+            <p>Exploratory comparison using nearest-grid support labels</p>
+          </div>
+        </div>
+
+        <div className="feature-list">
+          {[
+            ['Supported · 555 samples', 'MAE 2.5251'],
+            ['Caution · 35 samples', 'MAE 2.8742'],
+            ['Extrapolation · 24 samples', 'MAE 2.6401'],
+          ].map(([name, value]) => (
+            <div className="feature-row" key={name}>
+              <div className="feature-name">
+                <span>{name}</span>
+                <strong>{value}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="analysis-note">
+          Support labels do not show a consistent increase in error from
+          Supported to Caution to Extrapolation. The category sample sizes
+          are imbalanced, so these results should be treated as exploratory.
         </div>
       </section>
     </div>
   )
 }
 
-
-/* =========================
-   METHODOLOGY
-========================= */
-
 function Methodology() {
   const steps = [
     {
       number: '01',
       title: 'Historical plastic observations',
-      text: '614 marine plastic observations provide the target concentration values.',
+      text: '614 marine plastic observations provide the target microplastic concentration values in pieces/m³.',
     },
     {
       number: '02',
       title: 'Environmental data',
-      text: 'ERA5 wind and wave variables are combined with Copernicus GLOBCURRENT surface current data.',
+      text: 'ERA5 wind and wave variables are combined with Copernicus GLOBCURRENT surface-current data.',
     },
     {
       number: '03',
       title: 'Feature engineering',
-      text: 'Wind speed, current speed and month are derived from the environmental data.',
+      text: 'Wind speed and current speed are derived from velocity components. Month, location and environmental variables form the model inputs.',
     },
     {
       number: '04',
-      title: 'Machine learning',
-      text: 'A Random Forest regression model learns the relationship between environmental conditions and observed plastic concentration.',
+      title: 'SVR model training',
+      text: 'Support Vector Regression with an RBF kernel and standardized features learns relationships between the input variables and observed concentration.',
     },
     {
       number: '05',
       title: 'Spatial prediction',
-      text: 'The trained model generates predictions over a 6,615-point spatial grid.',
+      text: 'The trained SVR model generates predictions over a 6,615-point spatial grid using environmental conditions from the selected reference date.',
     },
     {
       number: '06',
       title: 'GIS visualization',
-      text: 'Predictions are displayed as an interactive map with accumulation-potential categories and prediction-support information.',
+      text: 'Folium displays the predicted concentration heatmap alongside geographic and environmental support diagnostics.',
     },
   ]
 
@@ -325,7 +341,7 @@ function Methodology() {
           <h2>Methodology</h2>
           <p>
             From historical observations to machine-learning-based spatial
-            prediction.
+            prediction and GIS visualization.
           </p>
         </div>
       </div>
@@ -335,7 +351,6 @@ function Methodology() {
           {steps.map((step) => (
             <div className="workflow-step" key={step.number}>
               <div className="step-number">{step.number}</div>
-
               <div>
                 <h3>{step.title}</h3>
                 <p>{step.text}</p>
@@ -350,7 +365,7 @@ function Methodology() {
           <span className="source-label">PLASTIC DATA</span>
           <h3>614 observations</h3>
           <p>
-            Historical microplastic measurements covering the Pacific Ocean
+            Historical microplastic measurements from the Pacific Ocean
             study region.
           </p>
         </div>
@@ -368,8 +383,17 @@ function Methodology() {
           <span className="source-label">GLOBCURRENT</span>
           <h3>Ocean Currents</h3>
           <p>
-            Daily surface current velocity components used to derive current
-            speed.
+            Daily surface-current velocity components used to derive
+            current speed.
+          </p>
+        </div>
+
+        <div className="source-card">
+          <span className="source-label">MACHINE LEARNING</span>
+          <h3>SVR with RBF kernel</h3>
+          <p>
+            Standardized environmental and geographic features are used
+            to predict microplastic concentration.
           </p>
         </div>
       </div>
@@ -377,16 +401,174 @@ function Methodology() {
   )
 }
 
-
-/* =========================
-   COMPONENTS
-========================= */
-
 function StatCard({ value, label }) {
   return (
     <div className="stat-card">
       <strong>{value}</strong>
       <span>{label}</span>
+    </div>
+  )
+}
+
+function ModelComparison() {
+  const models = [
+    {
+      name: 'Random Forest',
+      mae: 2.7195,
+      r2: -0.0939,
+      description: 'Ensemble of decision trees.',
+    },
+    {
+      name: 'Gradient Boosting',
+      mae: 2.8361,
+      r2: -0.0603,
+      description: 'Sequential boosting of decision trees.',
+    },
+    {
+      name: 'Extra Trees',
+      mae: 2.6049,
+      r2: 0.1224,
+      description: 'Ensemble of highly randomized trees.',
+    },
+    {
+      name: 'Support Vector Regression (SVR)',
+      mae: 2.5516,
+      r2: 0.1558,
+      description: 'RBF kernel with standardized input features.',
+    },
+  ]
+
+  return (
+    <div className="page">
+      <div className="page-intro">
+        <div>
+          <h2>Model Comparison</h2>
+          <p>
+            Comparing four regression algorithms using recorded
+            spatial cross-validation results.
+          </p>
+        </div>
+      </div>
+
+      <section className="content-card">
+        <div className="card-header">
+          <div>
+            <h3>Spatial Validation Results</h3>
+            <p>Lower MAE and higher R² are preferred.</p>
+          </div>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            textAlign: 'left',
+          }}>
+            <thead>
+              <tr>
+                {['Model', 'Mean MAE ↓', 'Mean R² ↑'].map((heading) => (
+                  <th key={heading} style={{
+                    padding: '14px 10px',
+                    borderBottom: '1px solid #29414a',
+                  }}>
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {models.map((model) => (
+                <tr key={model.name}>
+                  <td style={{
+                    padding: '14px 10px',
+                    borderBottom: '1px solid #203840',
+                  }}>
+                    <strong>{model.name}</strong>
+                    {model.name.startsWith('Support Vector') && (
+                      <span style={{
+                        display: 'block',
+                        color: '#43d9b4',
+                        fontSize: '12px',
+                        marginTop: '4px',
+                      }}>
+                        Current selected model
+                      </span>
+                    )}
+                  </td>
+                  <td style={{
+                    padding: '14px 10px',
+                    borderBottom: '1px solid #203840',
+                  }}>
+                    {model.mae.toFixed(4)}
+                  </td>
+                  <td style={{
+                    padding: '14px 10px',
+                    borderBottom: '1px solid #203840',
+                  }}>
+                    {model.r2.toFixed(4)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="analysis-note">
+          <strong>Interpretation:</strong> Based on the currently recorded
+          results, SVR has the lowest mean spatial MAE and highest mean
+          spatial R² among these four experiments.
+        </div>
+      </section>
+
+      <section className="content-card">
+        <div className="card-header">
+          <div>
+            <h3>Algorithm Overview</h3>
+            <p>How the four models make predictions</p>
+          </div>
+        </div>
+
+        <div className="feature-list">
+          {models.map((model) => (
+            <div className="feature-row" key={model.name}>
+              <div className="feature-name">
+                <span>{model.name}</span>
+              </div>
+              <p style={{ marginTop: '8px' }}>
+                {model.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="content-card">
+        <div className="card-header">
+          <div>
+            <h3>Validation Notes</h3>
+            <p>Important limitations of this comparison</p>
+          </div>
+        </div>
+
+        <ul>
+          <li>
+            The results are recorded fold averages from spatial
+            cross-validation experiments.
+          </li>
+          <li>
+            Identical held-out fold assignments must be verified before
+            treating the ranking as a definitive comparison.
+          </li>
+          <li>
+            R² is not percentage accuracy. Negative R² indicates performance
+            below the mean-target baseline for the evaluated folds.
+          </li>
+          <li>
+            The results describe this dataset and validation setup;
+            they do not establish that one algorithm is universally best.
+          </li>
+        </ul>
+      </section>
     </div>
   )
 }

@@ -1,7 +1,20 @@
+
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 import xarray as xr
 import joblib
+
+
+# =============================
+# PATHS
+# =============================
+
+ROOT = Path(__file__).resolve().parent
+
+MODEL_PATH = ROOT / "model" / "svr_model.joblib"
+OUTPUT_PATH = ROOT / "data" / "prediction_grid.csv"
 
 
 # =============================
@@ -28,39 +41,30 @@ def nearest_indices(values, targets):
     targets = np.asarray(targets)
 
     indices = np.searchsorted(values, targets)
-
-    indices = np.clip(
-        indices,
-        1,
-        len(values) - 1
-    )
+    indices = np.clip(indices, 1, len(values) - 1)
 
     left = values[indices - 1]
     right = values[indices]
 
     choose_right = (
         np.abs(right - targets)
-        <
-        np.abs(targets - left)
+        < np.abs(targets - left)
     )
 
-    return np.where(
-        choose_right,
-        indices,
-        indices - 1
-    )
+    return np.where(choose_right, indices, indices - 1)
 
 
 # =============================
-# LOAD MODEL
+# LOAD SVR MODEL
 # =============================
 
-saved = joblib.load(
-    "model/random_forest_model.joblib"
-)
+saved = joblib.load(MODEL_PATH)
 
 model = saved["model"]
 features = saved["features"]
+
+print("Loaded model:", saved.get("model_name", "SVR"))
+print("Model path:", MODEL_PATH)
 
 
 # =============================
@@ -99,15 +103,15 @@ print("Grid points:", len(grid))
 # =============================
 
 wind = xr.open_dataset(
-    "data/ERA5/ERA5_wind.nc"
+    ROOT / "data" / "ERA5" / "ERA5_wind.nc"
 )
 
 waves = xr.open_dataset(
-    "data/ERA5/ERA5_waves.nc"
+    ROOT / "data" / "ERA5" / "ERA5_waves.nc"
 )
 
 current = xr.open_dataset(
-    "data/currents/GLOBCURRENT_2015_2019.nc"
+    ROOT / "data" / "currents" / "GLOBCURRENT_2015_2019.nc"
 )
 
 
@@ -124,13 +128,8 @@ current = current.sortby("latitude").sortby("longitude")
 # GRID COORDINATES
 # =============================
 
-lat_target = grid[
-    "Latitude (degree)"
-].values
-
-lon_target = grid[
-    "Longitude (degree)"
-].values
+lat_target = grid["Latitude (degree)"].values
+lon_target = grid["Longitude (degree)"].values
 
 
 # =============================
@@ -143,31 +142,26 @@ wind_day = wind.sel(
 )
 
 wind_lat_idx = nearest_indices(
-    wind.latitude.values,
-    lat_target
+    wind.latitude.values, lat_target
 )
 
 wind_lon_idx = nearest_indices(
-    wind.longitude.values,
-    lon_target
+    wind.longitude.values, lon_target
 )
 
 wind_u = wind_day["u10"].values[
-    wind_lat_idx,
-    wind_lon_idx
+    wind_lat_idx, wind_lon_idx
 ]
 
 wind_v = wind_day["v10"].values[
-    wind_lat_idx,
-    wind_lon_idx
+    wind_lat_idx, wind_lon_idx
 ]
 
 grid["wind_u"] = wind_u
 grid["wind_v"] = wind_v
 
 grid["wind_speed"] = np.sqrt(
-    wind_u ** 2 +
-    wind_v ** 2
+    wind_u ** 2 + wind_v ** 2
 )
 
 
@@ -181,33 +175,24 @@ wave_day = waves.sel(
 )
 
 wave_lat_idx = nearest_indices(
-    waves.latitude.values,
-    lat_target
+    waves.latitude.values, lat_target
 )
 
 wave_lon_idx = nearest_indices(
-    waves.longitude.values,
-    lon_target
+    waves.longitude.values, lon_target
 )
 
-wave_direction = wave_day["mwd"].values[
-    wave_lat_idx,
-    wave_lon_idx
+grid["wave_direction"] = wave_day["mwd"].values[
+    wave_lat_idx, wave_lon_idx
 ]
 
-wave_period = wave_day["mwp"].values[
-    wave_lat_idx,
-    wave_lon_idx
+grid["wave_period"] = wave_day["mwp"].values[
+    wave_lat_idx, wave_lon_idx
 ]
 
-wave_height = wave_day["swh"].values[
-    wave_lat_idx,
-    wave_lon_idx
+grid["wave_height"] = wave_day["swh"].values[
+    wave_lat_idx, wave_lon_idx
 ]
-
-grid["wave_direction"] = wave_direction
-grid["wave_period"] = wave_period
-grid["wave_height"] = wave_height
 
 
 # =============================
@@ -220,31 +205,26 @@ current_day = current.sel(
 ).isel(depth=0)
 
 current_lat_idx = nearest_indices(
-    current.latitude.values,
-    lat_target
+    current.latitude.values, lat_target
 )
 
 current_lon_idx = nearest_indices(
-    current.longitude.values,
-    lon_target
+    current.longitude.values, lon_target
 )
 
 current_u = current_day["uo"].values[
-    current_lat_idx,
-    current_lon_idx
+    current_lat_idx, current_lon_idx
 ]
 
 current_v = current_day["vo"].values[
-    current_lat_idx,
-    current_lon_idx
+    current_lat_idx, current_lon_idx
 ]
 
 grid["current_u"] = current_u
 grid["current_v"] = current_v
 
 grid["current_speed"] = np.sqrt(
-    current_u ** 2 +
-    current_v ** 2
+    current_u ** 2 + current_v ** 2
 )
 
 
@@ -256,7 +236,7 @@ grid["month"] = pd.Timestamp(DATE).month
 
 
 # =============================
-# CHECK DATA
+# CHECK ENVIRONMENTAL DATA
 # =============================
 
 environmental_columns = [
@@ -271,23 +251,40 @@ environmental_columns = [
     "current_speed"
 ]
 
-print("\nMissing values:")
-print(
-    grid[environmental_columns]
-    .isna()
-    .sum()
-)
+grid.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+missing = grid[environmental_columns].isna().sum()
+
+print("\nMissing environmental values:")
+print(missing)
+
+if grid[features].isna().any().any():
+    raise ValueError(
+        "Prediction grid contains missing feature values. "
+        "Fix these before generating predictions."
+    )
 
 
 # =============================
-# PREDICTION
+# SVR PREDICTION
 # =============================
 
 X = grid[features]
 
-grid["Predicted_Concentration"] = (
-    model.predict(X)
+raw_predictions = model.predict(X)
+
+# Concentration cannot be negative.
+# Preserve raw outputs for transparency and clip only the
+# concentration used by the map.
+grid["SVR_Raw_Prediction"] = raw_predictions
+
+grid["Predicted_Concentration"] = np.maximum(
+    raw_predictions, 0
 )
+
+negative_count = int((raw_predictions < 0).sum())
+
+print("\nNegative raw predictions clipped:", negative_count)
 
 
 # =============================
@@ -312,7 +309,7 @@ grid["Accumulation_Potential"] = np.select(
 # =============================
 
 grid.to_csv(
-    "data/prediction_grid.csv",
+    OUTPUT_PATH,
     index=False
 )
 
@@ -321,30 +318,43 @@ grid.to_csv(
 # RESULTS
 # =============================
 
-print("\nPREDICTION COMPLETE")
-print("-------------------")
+print("\nSVR PREDICTION COMPLETE")
+print("------------------------")
+
+print("Prediction date:", DATE)
+print("Grid points:", len(grid))
 
 print(
-    "Minimum prediction:",
-    round(
-        grid["Predicted_Concentration"].min(),
-        3
-    )
+    "Minimum raw prediction:",
+    round(grid["SVR_Raw_Prediction"].min(), 3)
 )
 
 print(
-    "Maximum prediction:",
-    round(
-        grid["Predicted_Concentration"].max(),
-        3
-    )
+    "Maximum raw prediction:",
+    round(grid["SVR_Raw_Prediction"].max(), 3)
+)
+
+print(
+    "Minimum mapped concentration:",
+    round(grid["Predicted_Concentration"].min(), 3)
+)
+
+print(
+    "Maximum mapped concentration:",
+    round(grid["Predicted_Concentration"].max(), 3)
 )
 
 print("\nAccumulation Potential:")
-print(
-    grid["Accumulation_Potential"]
-    .value_counts()
-)
+print(grid["Accumulation_Potential"].value_counts())
 
 print("\nSaved:")
-print("data/prediction_grid.csv")
+print(OUTPUT_PATH)
+
+
+# =============================
+# CLOSE DATASETS
+# =============================
+
+wind.close()
+waves.close()
+current.close()

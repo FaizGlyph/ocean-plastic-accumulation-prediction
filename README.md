@@ -367,3 +367,9 @@ The prediction-support layer is provided to communicate where predictions are cl
 This repository contains the implementation and supporting files for the CSE7102 mini project:
 
 Ocean Plastic Accumulation Zone Prediction Model — Machine Learning Based Prediction and GIS Visualization
+
+HEAD
+Ocean Plastic Accumulation Zone Prediction Model — Machine Learning Based Prediction and GIS Visualization
+
+Ocean Plastic Accumulation Zone Prediction Model — Machine Learning Based Prediction and GIS Visualization
+8717473 (Integrate SVR model and add model comparison page)
